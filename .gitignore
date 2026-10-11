@@ -1,0 +1,12 @@
+node_modules/
+dist/
+dist-e2e/
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+.vercel
+tests/e2e/informe/
+tests/e2e/resultados/
+tests/e2e/capturas/

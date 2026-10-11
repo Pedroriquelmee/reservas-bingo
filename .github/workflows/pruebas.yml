@@ -1,0 +1,48 @@
+# Ejecuta todas las pruebas en cada push y pull request:
+# tipos, unitarias, base de datos (incluida concurrencia) y navegador.
+name: Pruebas
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL_ADMIN: postgres://postgres:postgres@localhost:5432/postgres
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Tipos
+        run: npm run typecheck
+      - name: Pruebas unitarias
+        run: npm test
+      - name: Pruebas de base de datos (RLS, permisos, concurrencia)
+        run: npm run test:db
+      - name: Instalar Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Pruebas en navegador
+        run: npm run test:e2e
+      - name: Informe de Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: informe-playwright
+          path: tests/e2e/informe
+          retention-days: 7

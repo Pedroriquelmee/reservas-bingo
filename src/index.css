@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+/* Colores del Grupo Scout Alba 601 (sacados del logo):
+   azul marino #17254a (el mar) y fucsia #f716a3 (la alegría y la juventud).
+   Para texto y botones se usa fucsia-700 (#c7127a): el blanco sobre él
+   tiene un contraste de 5,5:1 (accesible); sobre el fucsia del logo no lo sería.
+   Estados: disponible (verde), completo (marino), cancelado (gris), error (rojo). */
+@theme {
+  --color-fucsia-50: #fff0f8;
+  --color-fucsia-100: #ffd9ee;
+  --color-fucsia-200: #ffb3dd;
+  --color-fucsia-300: #ff85c8;
+  --color-fucsia-400: #ff4fb3;
+  --color-fucsia-500: #f716a3;
+  --color-fucsia-600: #e0128f;
+  --color-fucsia-700: #c7127a;
+  --color-fucsia-800: #a50b68;
+  --color-fucsia-900: #7d0a50;
+
+  --color-marino-50: #f2f5fb;
+  --color-marino-100: #e1e7f3;
+  --color-marino-200: #c3cee6;
+  --color-marino-300: #9aaad0;
+  --color-marino-400: #6b80b3;
+  --color-marino-500: #4a5f96;
+  --color-marino-600: #364a7d;
+  --color-marino-700: #2a3c69;
+  --color-marino-800: #1f3059;
+  --color-marino-900: #17254a;
+  --color-marino-950: #0e1731;
+}
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  @apply bg-marino-50 text-slate-900 antialiased;
+}
+
+/* Foco visible y consistente para teclado */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--color-fucsia-600);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+dialog::backdrop {
+  background: rgb(14 23 49 / 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
