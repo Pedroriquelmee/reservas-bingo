@@ -25,6 +25,7 @@ export function useAccion() {
       queryClient.invalidateQueries({ queryKey: ['admin'] });
       queryClient.invalidateQueries({ queryKey: ['calendario'] });
       queryClient.invalidateQueries({ queryKey: ['mis-reservas'] });
+      queryClient.invalidateQueries({ queryKey: ['ajustes-publicos'] });
     }
   }
 

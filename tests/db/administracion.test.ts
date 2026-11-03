@@ -168,14 +168,14 @@ describe('Administración de reservas y participantes', () => {
     const admin = await bd.crearAdmin();
     const f1 = await bd.crearFecha(7);
     const f2 = await bd.crearFecha(21);
-    for (const n of ['Ana', 'Bea', 'Carla']) {
+    for (const n of ['Ana', 'Bea', 'Carla', 'Dolores']) {
       const p = await bd.crearParticipante(n);
       await bd.rpc(p.uid, 'reservar', { p_fecha_id: f2.id });
     }
-    const d = await bd.crearParticipante('Diana');
+    const d = await bd.crearParticipante('Elena');
     const r = await bd.rpc(d.uid, 'reservar', { p_fecha_id: f1.id });
     await fallaCon(bd.rpc(admin.uid, 'admin_mover_reserva', { p_reserva_id: r.id, p_nueva_fecha_id: f2.id }), 'FECHA_COMPLETA');
-    expect(await bd.reservasActivas(f2.id)).toBe(3);
+    expect(await bd.reservasActivas(f2.id)).toBe(4);
   });
 
   it('gestiona permisos sin dejar nunca el sistema sin administradores', async () => {
@@ -208,7 +208,8 @@ describe('Administración de reservas y participantes', () => {
     const e = await bd.rpc(admin.uid, 'admin_estadisticas');
     expect(e).toMatchObject({
       fechas_programadas: 2,
-      plazas_totales_futuras: 6,
+      plazas_totales_futuras: 8,
+      plazas_por_fecha: 4,
       plazas_ocupadas_futuras: 1,
       reservas_realizadas: 2,
       reservas_activas: 1,

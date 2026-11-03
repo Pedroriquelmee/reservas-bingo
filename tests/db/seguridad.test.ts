@@ -92,6 +92,7 @@ describe('Seguridad y permisos', () => {
       ['admin_editar_participante', { p_id: p.id, p_nombre: 'Pedro', p_apellidos: 'Prueba', p_activo: true }],
       ['admin_historial', {}],
       ['admin_estadisticas', {}],
+      ['admin_cambiar_plazas', { p_plazas: 10 }],
       ['admin_cancelar_reserva', { p_reserva_id: reserva.id, p_motivo: null }],
       ['admin_mover_reserva', { p_reserva_id: reserva.id, p_nueva_fecha_id: f2.id }],
       ['admin_cambiar_rol', { p_id: p.id, p_rol: 'admin' }],
@@ -117,6 +118,8 @@ describe('Seguridad y permisos', () => {
     expect(await bd.estadoFecha(f.id)).toBe('abierta');
     expect(await bd.reservasActivas(f.id)).toBe(1);
     expect(await bd.rpc(p.uid, 'es_admin')).toBe(false);
+    const [cfg] = await bd.sql<{ n: number }>('select plazas_por_fecha as n from public.configuracion');
+    expect(cfg.n).toBe(4);
   });
 
   it('un administrador bloqueado deja de tener permisos', async () => {
@@ -159,10 +162,10 @@ describe('Seguridad y permisos', () => {
     const anon = filas.filter((f) => f.rol === 'anon').map((f) => f.funcion);
     const auth = filas.filter((f) => f.rol === 'authenticated').map((f) => f.funcion);
 
-    expect(anon).toEqual(['calendario_publico']);
+    expect(anon).toEqual(['ajustes_publicos', 'calendario_publico']);
     expect(auth.filter((f) => f.startsWith('_'))).toEqual([]);
     expect(auth.filter((f) => !f.startsWith('admin_')).sort()).toEqual(
-      ['calendario_publico', 'cancelar_mi_reserva', 'eliminar_mi_cuenta', 'es_admin', 'guardar_mi_perfil',
+      ['ajustes_publicos', 'calendario_publico', 'cancelar_mi_reserva', 'eliminar_mi_cuenta', 'es_admin', 'guardar_mi_perfil',
        'mi_participante_id', 'mi_perfil', 'mis_reservas', 'reservar'].sort(),
     );
   });

@@ -7,6 +7,7 @@ Archivos (ejecutar en este orden):
 | `supabase/migrations/20261011000100_esquema.sql` | Tipos, tablas, restricciones, índices y triggers |
 | `supabase/migrations/20261011000200_funciones.sql` | Todas las operaciones (reservar, cancelar, administración…) |
 | `supabase/migrations/20261011000300_seguridad.sql` | RLS, permisos y tiempo real |
+| `supabase/migrations/20261103000100_plazas_configurables.sql` | Plazas por domingo configurables (de 3 a 4) |
 | `supabase/opcional/generacion_automatica_diaria.sql` | Tarea diaria con pg_cron (opcional) |
 
 ## Modelo
@@ -60,14 +61,14 @@ erDiagram
     }
 ```
 
-Además, `configuracion` (una sola fila) guarda los ajustes de la generación automática.
+Además, `configuracion` (una sola fila) guarda el número de **plazas por domingo** (`plazas_por_fecha`, ahora 4) y los ajustes de la generación automática.
 
 ## Cómo se garantizan las reglas obligatorias
 
 | Regla | Mecanismo en la base de datos |
 |---|---|
-| **Nunca más de 3 reservas activas por fecha** | Columna `plaza` con `check (plaza between 1 and 3)` + índice único parcial `(fecha_id, plaza) where estado = 'activa'`. Con solo 3 valores posibles y sin repetir, **es físicamente imposible** guardar una 4.ª reserva activa, venga de donde venga (web, panel de Supabase, un error futuro en el código). |
-| **Sin carreras entre solicitudes simultáneas** | `reservar` bloquea la fila de la fecha con `SELECT … FOR UPDATE` antes de contar. Las solicitudes del mismo domingo se ponen en fila: la segunda espera a que la primera termine y ve su resultado. Así nadie recibe «completo» habiendo plaza, ni dos personas se llevan la misma. |
+| **Nunca más reservas activas que plazas (ahora 4)** | Cada reserva ocupa una `plaza` numerada + índice único parcial `(fecha_id, plaza) where estado = 'activa'` + trigger `reservas_limite_plazas` que rechaza cualquier plaza por encima de `configuracion.plazas_por_fecha` (y `check (plaza between 1 and 20)` como tope absoluto). Así **es imposible** guardar una reserva de más, venga de donde venga (web, panel de Supabase, un error futuro en el código). |
+| **Sin carreras entre solicitudes simultáneas** | `reservar` bloquea la fila de la fecha con `SELECT … FOR UPDATE` antes de contar. Las solicitudes del mismo domingo se ponen en fila: la segunda espera a que la primera termine y ve su resultado. Así nadie recibe «completo» habiendo plaza, ni dos personas se llevan la misma. | Antes, la reserva lee el número de plazas con `FOR SHARE`: si un administrador lo está cambiando a la vez, una de las dos operaciones espera a la otra (siempre en el mismo orden, sin interbloqueos).
 | **Una persona no reserva dos veces el mismo domingo** | Índice único parcial `(participante_id, fecha_id) where estado = 'activa'`. Tras cancelar, puede volver a apuntarse. |
 | **Plazas calculadas, no editables** | No existe ningún contador. Las plazas se cuentan siempre a partir de las reservas activas, y nadie puede escribir en las tablas desde el navegador. |
 | **Sin fechas duplicadas** | `unique (fecha)` en `fechas_bingo`. Generar fechas usa `on conflict do nothing` y devuelve cuáles se omitieron. |
@@ -81,6 +82,7 @@ Además, `configuracion` (una sola fila) guarda los ajustes de la generación au
 | Función | Qué hace |
 |---|---|
 | `calendario_publico()` | Próximas fechas con plazas, estado y nombres públicos («Pedro R.»). Con sesión, indica también si ya tienes plaza. |
+| `ajustes_publicos()` | Número de plazas por domingo (para los textos de la web). |
 
 **Participantes (con sesión)**
 
@@ -94,7 +96,7 @@ Además, `configuracion` (una sola fila) guarda los ajustes de la generación au
 
 **Administración** (todas empiezan con `_exigir_admin()`, que comprueba el rol en el servidor)
 
-`admin_calendario`, `admin_crear_fecha`, `admin_editar_fecha`, `admin_cancelar_fecha` (exige confirmación si hay reservas), `admin_reabrir_fecha`, `admin_eliminar_fecha` (solo si nunca tuvo reservas), `admin_generar_fechas` (con vista previa), `admin_asegurar_fechas_futuras`, `admin_obtener_configuracion`, `admin_guardar_configuracion`, `admin_reservar_para`, `admin_cancelar_reserva`, `admin_mover_reserva`, `admin_listar_reservas`, `admin_listar_participantes`, `admin_crear_participante`, `admin_editar_participante`, `admin_cambiar_rol` (nunca deja el sistema sin administradores), `admin_historial`, `admin_estadisticas`.
+`admin_calendario`, `admin_crear_fecha`, `admin_editar_fecha`, `admin_cancelar_fecha` (exige confirmación si hay reservas), `admin_reabrir_fecha`, `admin_eliminar_fecha` (solo si nunca tuvo reservas), `admin_generar_fechas` (con vista previa), `admin_asegurar_fechas_futuras`, `admin_obtener_configuracion`, `admin_guardar_configuracion`, `admin_reservar_para`, `admin_cancelar_reserva`, `admin_mover_reserva`, `admin_listar_reservas`, `admin_listar_participantes`, `admin_crear_participante`, `admin_editar_participante`, `admin_cambiar_rol` (nunca deja el sistema sin administradores), `admin_historial`, `admin_estadisticas`, `admin_cambiar_plazas` (subir reabre los domingos completos; bajar solo si ningún domingo futuro tiene más personas apuntadas, y renumera las plazas).
 
 Los errores de negocio se devuelven como códigos (`FECHA_COMPLETA`, `YA_RESERVADO`, `NO_AUTORIZADO`…) que la web traduce a mensajes claros (`src/lib/errores.ts`).
 

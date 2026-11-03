@@ -25,6 +25,7 @@ export function ProveedorTiempoReal({ children }: { children: ReactNode }) {
           queryClient.invalidateQueries({ queryKey: ['calendario'] });
           queryClient.invalidateQueries({ queryKey: ['mis-reservas'] });
           queryClient.invalidateQueries({ queryKey: ['admin'] });
+          queryClient.invalidateQueries({ queryKey: ['ajustes-publicos'] });
         }, 250);
       })
       .subscribe((estado) => {

@@ -47,14 +47,14 @@ Guarda el archivo en un sitio privado: contiene datos personales. Este archivo s
 
 **Cambiar el texto de la página o de los correos**: los textos están en `src/paginas/*.tsx`, `src/components/*.tsx` y `supabase/plantillas-email/codigo-acceso.html` (esta última se pega de nuevo en Supabase).
 
-**Cambiar el número de plazas (3)**: está fijado a propósito en la base de datos. Habría que crear una migración nueva que cambie el `check (plaza between 1 and 3)`, el `generate_series(1, 3)` de `_crear_reserva` y `admin_mover_reserva`, el `>= 3` de `_recalcular_estado_fecha` y los `3` de `calendario_publico`, `admin_calendario` y `admin_estadisticas`; después, ajustar las pruebas.
+**Cambiar el número de plazas por domingo (ahora 4)**: Panel → **Ajustes → Plazas por domingo** (de 1 a 20). Se aplica al momento a todas las fechas. Subirlo reabre los domingos completos. Para bajarlo, ningún domingo futuro puede tener más personas apuntadas que el nuevo número: si lo tiene, el panel te dice cuál, y antes hay que cancelar o mover alguna reserva.
 
 ## Hacer cambios en la base de datos
 
 1. Nunca edites las migraciones ya aplicadas: crea un archivo nuevo en `supabase/migrations/` con fecha posterior (p. ej. `20270101000100_cambio.sql`).
 2. Si creas una función nueva, por seguridad **no** se concede automáticamente: añade su `grant execute … to authenticated` (o `anon`) explícito.
 3. Añade o ajusta las pruebas en `tests/db/` y ejecútalas (`npm run test:db`).
-4. Aplica la migración en Supabase (SQL Editor) y comprueba con el bloque 6 de `mantenimiento.sql` que solo `calendario_publico` es accesible para visitantes.
+4. Aplica la migración en Supabase (SQL Editor) y comprueba con el bloque 6 de `mantenimiento.sql` que solo `ajustes_publicos` y `calendario_publico` son accesibles para visitantes.
 
 ## Claves y credenciales
 

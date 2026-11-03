@@ -60,6 +60,8 @@ export function describirEntrada(e: EntradaHistorial): string {
       return `${quien}: ${d.despues === 'admin' ? 'ahora es administrador/a' : 'deja de ser administrador/a'}`;
     case 'cuenta_eliminada':
       return 'Una persona eliminó su cuenta';
+    case 'plazas_cambiadas':
+      return `Plazas por domingo: de ${d.antes} a ${d.despues}`;
     case 'configuracion_actualizada':
       return `Ajustes de generación: ${d.generacion_automatica ? 'automática activada' : 'automática desactivada'}, cada ${d.intervalo_dias} días`;
     default:

@@ -25,7 +25,8 @@ export class Bd {
       delete from auth.users;
       update public.configuracion
          set generacion_automatica = false, intervalo_dias = 14,
-             fecha_referencia = null, fechas_futuras_minimas = 6;
+             fecha_referencia = null, fechas_futuras_minimas = 6,
+             plazas_por_fecha = 4;
     `);
   }
 

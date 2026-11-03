@@ -96,6 +96,7 @@ export interface Estadisticas {
   fechas_canceladas_futuras: number;
   fechas_pasadas: number;
   plazas_totales_futuras: number;
+  plazas_por_fecha: number;
   plazas_ocupadas_futuras: number;
   reservas_realizadas: number;
   reservas_activas: number;
@@ -110,6 +111,7 @@ export interface Configuracion {
   intervalo_dias: number;
   fecha_referencia: string | null;
   fechas_futuras_minimas: number;
+  plazas_por_fecha: number;
   actualizado_en: string;
   generadas?: string[];
 }

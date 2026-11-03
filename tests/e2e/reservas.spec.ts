@@ -26,15 +26,15 @@ test('#4 un visitante ve los próximos domingos, quién va y el estado de cada f
   const maria = await crearPersona('María', 'García López', 'maria@prueba.test');
   await reservarComo(pedro.uid, f1.id);
   await reservarComo(maria.uid, f1.id);
-  for (const n of ['Ana', 'Bea', 'Carla']) await reservarComo((await crearPersona(n, 'Prueba')).uid, f2.id);
+  for (const n of ['Ana', 'Bea', 'Carla', 'Dolores']) await reservarComo((await crearPersona(n, 'Prueba')).uid, f2.id);
 
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Reservas de Bingo', level: 1 })).toBeVisible();
 
   const t1 = tarjeta(page, formatoLargo(f1.fecha));
   await expect(t1.getByText('Disponible', { exact: true })).toBeVisible();
-  await expect(t1).toContainText('Plazas ocupadas2 de 3');
-  await expect(t1).toContainText('Plazas disponibles1');
+  await expect(t1).toContainText('Plazas ocupadas2 de 4');
+  await expect(t1).toContainText('Plazas disponibles2');
   await expect(t1.getByRole('listitem')).toHaveText(['Pedro R.', 'María G.']);
   await expect(t1).toContainText('De 17:00 a 20:00');
   await expect(t1.getByRole('button', { name: 'Reservar plaza' })).toBeEnabled();
@@ -42,7 +42,7 @@ test('#4 un visitante ve los próximos domingos, quién va y el estado de cada f
   const t2 = tarjeta(page, formatoLargo(f2.fecha));
   await expect(t2.getByText('COMPLETO', { exact: true }).first()).toBeVisible();
   await expect(t2.getByRole('button', { name: 'COMPLETO' })).toBeDisabled();
-  await expect(t2.getByRole('listitem')).toHaveCount(3);
+  await expect(t2.getByRole('listitem')).toHaveCount(4);
 
   const t3 = tarjeta(page, formatoLargo(f3.fecha));
   await expect(t3.getByText('Cancelado', { exact: true })).toBeVisible();
@@ -78,7 +78,7 @@ test('#1 #5 #6 flujo completo: identificarse con código, indicar nombre, ver re
   // Resumen antes de confirmar
   await expect(dialogo.getByRole('heading', { name: 'Confirma tu reserva' })).toBeVisible();
   await expect(dialogo).toContainText(formatoLargo(f.fecha));
-  await expect(dialogo).toContainText('Plazas libres: 2 de 3');
+  await expect(dialogo).toContainText('Plazas libres: 3 de 4');
   await expect(dialogo).toContainText('Lucía Fernández Ruiz');
   await page.screenshot({ path: 'tests/e2e/capturas/resumen-reserva.png' });
   await dialogo.getByRole('button', { name: 'Confirmar reserva' }).click();
@@ -98,13 +98,13 @@ test('#1 #5 #6 flujo completo: identificarse con código, indicar nombre, ver re
   const pagina2 = await otro.newPage();
   await pagina2.goto('/');
   await expect(tarjeta(pagina2, formatoLargo(f.fecha)).getByRole('listitem')).toHaveText(['Pedro R.', 'Lucía F.']);
-  await expect(tarjeta(pagina2, formatoLargo(f.fecha))).toContainText('Plazas disponibles1');
+  await expect(tarjeta(pagina2, formatoLargo(f.fecha))).toContainText('Plazas disponibles2');
   await otro.close();
 });
 
 test('#3 si la última plaza se ocupa mientras confirmas, la web lo impide y no muestra una reserva falsa', async ({ page }) => {
   const f = await crearFecha(7);
-  for (const n of ['Ana', 'Bea']) await reservarComo((await crearPersona(n, 'Prueba')).uid, f.id);
+  for (const n of ['Ana', 'Bea', 'Carla']) await reservarComo((await crearPersona(n, 'Prueba')).uid, f.id);
   await crearPersona('Diana', 'Prueba', 'diana@prueba.test');
   const rapida = await crearPersona('Rápida', 'Prueba');
 
@@ -118,10 +118,10 @@ test('#3 si la última plaza se ocupa mientras confirmas, la web lo impide y no 
   await reservarComo(rapida.uid, f.id);
   await dialogo.getByRole('button', { name: 'Confirmar reserva' }).click();
 
-  await expect(dialogo.getByRole('alert')).toContainText('Este domingo ya tiene las tres plazas ocupadas. Puedes consultar otras fechas disponibles.');
+  await expect(dialogo.getByRole('alert')).toContainText('Este domingo ya tiene todas las plazas ocupadas. Puedes consultar otras fechas disponibles.');
   await expect(dialogo.getByRole('heading', { name: '¡Reserva confirmada!' })).toHaveCount(0);
   await expect(dialogo.getByRole('button', { name: 'Confirmar reserva' })).toBeDisabled();
-  expect(await reservasActivas(f.id)).toBe(3);
+  expect(await reservasActivas(f.id)).toBe(4);
 
   await dialogo.getByRole('button', { name: 'Volver' }).click();
   await expect(tarjeta(page, formatoLargo(f.fecha)).getByRole('button', { name: 'COMPLETO' })).toBeDisabled();
@@ -130,7 +130,7 @@ test('#3 si la última plaza se ocupa mientras confirmas, la web lo impide y no 
 test('#7 cancelar mi plaza desde la tarjeta la libera al momento', async ({ page }) => {
   const f = await crearFecha(7);
   const yo = await crearPersona('Pedro', 'Riquelme', 'pedro@prueba.test');
-  for (const n of ['Ana', 'Bea']) await reservarComo((await crearPersona(n, 'Prueba')).uid, f.id);
+  for (const n of ['Ana', 'Bea', 'Carla']) await reservarComo((await crearPersona(n, 'Prueba')).uid, f.id);
   await reservarComo(yo.uid, f.id);
 
   await iniciarSesion(page, 'pedro@prueba.test');
@@ -144,7 +144,7 @@ test('#7 cancelar mi plaza desde la tarjeta la libera al momento', async ({ page
   await expect(page.getByText('Reserva cancelada. La plaza ya está libre para otra persona.')).toBeVisible();
   await expect(t.getByText('Disponible', { exact: true })).toBeVisible();
   await expect(t.getByRole('button', { name: 'Reservar plaza' })).toBeEnabled();
-  expect(await reservasActivas(f.id)).toBe(2);
+  expect(await reservasActivas(f.id)).toBe(3);
   const [h] = await sql(`select count(*)::int as n from public.historial where accion = 'reserva_cancelada'`);
   expect(h.n).toBe(1);
 });
@@ -406,4 +406,41 @@ test('identidad del Grupo Scout Alba 601: logo, nombre y título', async ({ page
   await expect(page.getByText('una iniciativa del Grupo Scout Alba 601')).toBeVisible();
   const respuesta = await page.request.get('/logo-email.png');
   expect(respuesta.headers()['content-type']).toContain('image/png');
+});
+
+test('el admin cambia las plazas por domingo y la web pública lo refleja al momento', async ({ page }) => {
+  await crearPersona('Admin', 'Gestor', 'admin@prueba.test', 'admin');
+  const f = await crearFecha(7);
+  for (const n of ['Ana', 'Bea', 'Carla', 'Dolores']) await reservarComo((await crearPersona(n, 'Prueba')).uid, f.id);
+
+  // Con 4 plazas: textos y fecha completa
+  await page.goto('/');
+  await expect(page.getByText('Cada domingo necesitamos 4 personas', { exact: false })).toBeVisible();
+  await expect(page.getByText('Máximo 4 personas por domingo')).toBeVisible();
+  await expect(tarjeta(page, formatoLargo(f.fecha)).getByRole('button', { name: 'COMPLETO' })).toBeDisabled();
+
+  // No deja bajar a 3 (ese domingo ya tiene 4) y lo explica
+  await iniciarSesion(page, 'admin@prueba.test');
+  await page.goto('/admin/ajustes');
+  const tarjetaPlazas = page.locator('form').filter({ has: page.getByRole('heading', { name: 'Plazas por domingo' }) });
+  await expect(tarjetaPlazas).toContainText('Ahora: 4 plazas');
+  await tarjetaPlazas.getByLabel('Plazas').fill('3');
+  await tarjetaPlazas.getByRole('button', { name: 'Guardar plazas' }).click();
+  await expect(tarjetaPlazas.getByRole('alert')).toContainText(`No se puede bajar a 3: el ${formatoLargo(f.fecha)} ya tiene 4 personas apuntadas`);
+
+  // Subir a 5: se guarda y ese domingo vuelve a tener hueco
+  await tarjetaPlazas.getByLabel('Plazas').fill('5');
+  await tarjetaPlazas.getByRole('button', { name: 'Guardar plazas' }).click();
+  await expect(page.getByText('Ahora hay 5 plazas por domingo.')).toBeVisible();
+  await expect(tarjetaPlazas).toContainText('Ahora: 5 plazas');
+  await page.screenshot({ path: 'tests/e2e/capturas/admin-plazas.png', fullPage: true });
+
+  await page.goto('/');
+  const t = tarjeta(page, formatoLargo(f.fecha));
+  await expect(t).toContainText('Plazas ocupadas4 de 5');
+  await expect(t.getByRole('button', { name: 'Reservar plaza' })).toBeEnabled();
+  await expect(page.getByText('Máximo 5 personas por domingo')).toBeVisible();
+
+  await page.goto('/admin/historial');
+  await expect(page.getByText('Plazas por domingo: de 4 a 5')).toBeVisible();
 });

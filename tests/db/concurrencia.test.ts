@@ -1,4 +1,4 @@
-// Prueba obligatoria #9: solicitudes simultáneas nunca superan 3 plazas.
+// Prueba obligatoria #9: solicitudes simultáneas nunca superan el límite de plazas (4).
 //
 // Cada intento abre su propia conexión (como navegadores distintos),
 // prepara su transacción y TODOS lanzan "reservar" a la vez. Se repite
@@ -48,7 +48,7 @@ async function enParalelo(uids: string[], funcion: string, args: (i: number) => 
 }
 
 describe('Concurrencia', () => {
-  it('#9 diez personas reservando a la vez el mismo domingo: exactamente 3 lo consiguen (25 rondas)', async () => {
+  it('#9 diez personas reservando a la vez el mismo domingo: exactamente 4 lo consiguen (25 rondas)', async () => {
     const personas = [];
     for (let i = 0; i < 10; i++) personas.push(await bd.crearParticipante(`Persona${String.fromCharCode(65 + i)}`));
     const uids = personas.map((p) => p.uid);
@@ -60,11 +60,11 @@ describe('Concurrencia', () => {
       const exitos = resultados.filter((r) => r.ok) as { ok: true; plaza: number }[];
       const fallos = resultados.filter((r) => !r.ok) as { ok: false; error: string }[];
 
-      expect(exitos).toHaveLength(3);
-      expect(exitos.map((r) => r.plaza).sort()).toEqual([1, 2, 3]);
-      expect(fallos).toHaveLength(7);
+      expect(exitos).toHaveLength(4);
+      expect(exitos.map((r) => r.plaza).sort()).toEqual([1, 2, 3, 4]);
+      expect(fallos).toHaveLength(6);
       expect(new Set(fallos.map((r) => r.error))).toEqual(new Set(['FECHA_COMPLETA']));
-      expect(await bd.reservasActivas(f.id)).toBe(3);
+      expect(await bd.reservasActivas(f.id)).toBe(4);
       expect(await bd.estadoFecha(f.id)).toBe('completa');
     }
   });
@@ -80,10 +80,10 @@ describe('Concurrencia', () => {
     expect(await bd.reservasActivas(f.id)).toBe(1);
   });
 
-  it('reservas y cancelaciones mezcladas a la vez nunca superan 3 plazas activas', async () => {
+  it('reservas y cancelaciones mezcladas a la vez nunca superan 4 plazas activas', async () => {
     const f = await bd.crearFecha(7);
     const titulares: { uid: string; id: string; reserva: { id: string } }[] = [];
-    for (const n of ['Ana', 'Bea', 'Carla']) {
+    for (const n of ['Ana', 'Bea', 'Carla', 'Diana']) {
       const p = await bd.crearParticipante(n);
       titulares.push({ ...p, reserva: await bd.rpc(p.uid, 'reservar', { p_fecha_id: f.id }) });
     }
@@ -118,7 +118,7 @@ describe('Concurrencia', () => {
     }
 
     const activas = await bd.reservasActivas(f.id);
-    expect(activas).toBeLessThanOrEqual(3);
+    expect(activas).toBeLessThanOrEqual(4);
     const [plazas] = await bd.sql<{ n: number }>(
       `select count(distinct plaza)::int as n from public.reservas where fecha_id = $1 and estado = 'activa'`,
       [f.id],
@@ -126,24 +126,33 @@ describe('Concurrencia', () => {
     expect(plazas.n).toBe(activas);
   });
 
-  it('la propia base de datos impide una 4.ª plaza aunque alguien salte las funciones', async () => {
+  it('la propia base de datos impide una 5.ª plaza aunque alguien salte las funciones', async () => {
     const f = await bd.crearFecha(7);
     const ps = [];
-    for (const n of ['Ana', 'Bea', 'Carla', 'Diana']) ps.push(await bd.crearParticipante(n));
-    for (const p of ps.slice(0, 3)) await bd.rpc(p.uid, 'reservar', { p_fecha_id: f.id });
+    for (const n of ['Ana', 'Bea', 'Carla', 'Diana', 'Elena']) ps.push(await bd.crearParticipante(n));
+    for (const p of ps.slice(0, 4)) await bd.rpc(p.uid, 'reservar', { p_fecha_id: f.id });
 
     // Como superusuario, insertando a mano en la tabla:
     await expect(
-      bd.sql(`insert into public.reservas (participante_id, fecha_id, plaza) values ($1, $2, 1)`, [ps[3].id, f.id]),
+      bd.sql(`insert into public.reservas (participante_id, fecha_id, plaza) values ($1, $2, 1)`, [ps[4].id, f.id]),
     ).rejects.toThrow(/reservas_plaza_unica/);
+    // Plaza por encima del límite configurado (4) → la rechaza el trigger
     await expect(
-      bd.sql(`insert into public.reservas (participante_id, fecha_id, plaza) values ($1, $2, 4)`, [ps[3].id, f.id]),
-    ).rejects.toThrow(/plaza_check/);
+      bd.sql(`insert into public.reservas (participante_id, fecha_id, plaza) values ($1, $2, 5)`, [ps[4].id, f.id]),
+    ).rejects.toThrow(/FECHA_COMPLETA/);
+    // Por encima del máximo absoluto (20) también se rechaza, y el CHECK sigue ahí de respaldo
+    await expect(
+      bd.sql(`insert into public.reservas (participante_id, fecha_id, plaza) values ($1, $2, 21)`, [ps[4].id, f.id]),
+    ).rejects.toThrow(/FECHA_COMPLETA|reservas_plaza_rango/);
+    const [check] = await bd.sql<{ def: string }>(
+      `select pg_get_constraintdef(oid) as def from pg_constraint where conname = 'reservas_plaza_rango'`,
+    );
+    expect(check.def).toMatch(/plaza >= 1.*plaza <= 20/);
     // Y tampoco una reserva duplicada de la misma persona
     await expect(
       bd.sql(`insert into public.reservas (participante_id, fecha_id, plaza) values ($1, $2, 3)`, [ps[0].id, f.id]),
     ).rejects.toThrow(/reservas_(una_por_persona_y_fecha|plaza_unica)/);
 
-    expect(await bd.reservasActivas(f.id)).toBe(3);
+    expect(await bd.reservasActivas(f.id)).toBe(4);
   });
 });

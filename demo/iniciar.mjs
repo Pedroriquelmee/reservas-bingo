@@ -114,6 +114,7 @@ async function sembrar() {
   const maria = await cuenta('maria@demo.local', 'María', 'García López');
   const javier = await cuenta('javier@demo.local', 'Javier', 'Martín');
   const lucia = await cuenta('lucia@demo.local', 'Lucía', 'Fernández');
+  const pablo = await cuenta('pablo@demo.local', 'Pablo', 'Ortega');
   const carmen = await como(admin.uid, 'admin_crear_participante', { p_nombre: 'Carmen', p_apellidos: 'Sánchez' });
 
   const fecha = async (n, notas = null) => (await como(admin.uid, 'admin_crear_fecha', { p_fecha: await dia(n), p_notas: notas })).id;
@@ -129,5 +130,6 @@ async function sembrar() {
   await como(maria.uid, 'reservar', { p_fecha_id: f2 });
   await como(lucia.uid, 'reservar', { p_fecha_id: f2 });
   await como(admin.uid, 'admin_reservar_para', { p_participante_id: carmen.id, p_fecha_id: f2 });
+  await como(pablo.uid, 'reservar', { p_fecha_id: f2 });
   await como(admin.uid, 'admin_cancelar_fecha', { p_id: f4, p_motivo: 'Fiestas del barrio', p_confirmar: false });
 }

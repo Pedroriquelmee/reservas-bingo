@@ -1,6 +1,6 @@
 # Reservas de Bingo · Grupo Scout Alba 601
 
-Web del **Grupo Scout Alba 601** para organizar quién ayuda en los domingos de bingo: **3 plazas por domingo**, nombres visibles para todos, reservas y cancelaciones desde el móvil y panel de administración. Pensada para publicarse en **https://reservas.pedroriquelme.tech**.
+Web del **Grupo Scout Alba 601** para organizar quién ayuda en los domingos de bingo: **4 plazas por domingo** (se cambia desde el panel), nombres visibles para todos, reservas y cancelaciones desde el móvil y panel de administración. Pensada para publicarse en **https://reservas.pedroriquelme.tech**.
 
 ![Página principal](docs/capturas/inicio-escritorio.png)
 
@@ -22,7 +22,7 @@ Abre <http://localhost:5173>. Para entrar, usa cualquier correo inventado (`tu@d
 
 - Lista de próximos domingos con plazas ocupadas/libres, quién va («Pedro R.») y estado **Disponible / COMPLETO / Cancelado**.
 - Reserva en tres pasos: código por correo (sin contraseñas) → nombre y apellidos la primera vez → resumen → confirmación.
-- El límite de 3 plazas lo garantiza la **base de datos**, también con muchas personas reservando a la vez.
+- El límite de plazas (ahora 4) lo garantiza la **base de datos**, también con muchas personas reservando a la vez. Se cambia en Administración → Ajustes.
 - «Mis reservas»: ver, cancelar con confirmación, editar datos y eliminar la cuenta.
 - Tiempo real: lo que reserva una persona aparece en los demás dispositivos sin recargar.
 - Panel privado: fechas (manuales, generadas cada 14 días con vista previa, editar, cancelar avisando de las reservas afectadas, reabrir), reservas (cancelar, mover, apuntar a alguien sin cuenta, exportar CSV), participantes y permisos, historial y estadísticas, generación automática configurable.

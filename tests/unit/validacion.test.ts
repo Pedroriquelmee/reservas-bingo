@@ -41,7 +41,7 @@ describe('correo y código', () => {
 describe('errores', () => {
   it('traduce los códigos del servidor', () => {
     expect(traducirError({ message: 'FECHA_COMPLETA', code: 'P0001' }).mensaje).toBe(
-      'Este domingo ya tiene las tres plazas ocupadas. Puedes consultar otras fechas disponibles.',
+      'Este domingo ya tiene todas las plazas ocupadas. Puedes consultar otras fechas disponibles.',
     );
     expect(traducirError({ message: 'permission denied for function admin_estadisticas', code: '42501' }).codigo).toBe('NO_AUTORIZADO');
   });

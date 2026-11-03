@@ -20,7 +20,7 @@ export async function limpiar(): Promise<void> {
   await sql(`
     truncate public.historial, public.reservas, public.fechas_bingo, public.participantes restart identity cascade;
     delete from auth.users;
-    update public.configuracion set generacion_automatica = false, intervalo_dias = 14, fecha_referencia = null, fechas_futuras_minimas = 6;
+    update public.configuracion set generacion_automatica = false, intervalo_dias = 14, fecha_referencia = null, fechas_futuras_minimas = 6, plazas_por_fecha = 4;
   `);
   await fetch(`${SIMULADOR}/__pruebas/olvidar-limites`);
 }

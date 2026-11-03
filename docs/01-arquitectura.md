@@ -25,7 +25,7 @@ No hay servidor propio que mantener: la web es estática y **todas las reglas vi
 | Pieza | Servicio | Motivo |
 |---|---|---|
 | Frontend | React 19 + TypeScript + Tailwind CSS 4 (Vite) | Lo que pediste. Web estática: rápida, barata y sin servidor. |
-| Base de datos | PostgreSQL (Supabase) | Transacciones y bloqueos reales: imprescindible para que el límite de 3 plazas sea atómico. |
+| Base de datos | PostgreSQL (Supabase) | Transacciones y bloqueos reales: imprescindible para que el límite de plazas sea atómico. |
 | Backend y permisos | Funciones SQL + Row Level Security | El navegador no puede escribir en ninguna tabla. Solo llama a funciones que comprueban quién eres y qué puedes hacer. |
 | Identificación | Supabase Auth, código de un solo uso por correo | Tu elección. Sin contraseñas que robar o reutilizar, una identidad por correo, difícil de suplantar. |
 | Correo | Resend vía SMTP | El correo de serie de Supabase solo envía a los miembros del equipo y está limitado a muy pocos mensajes por hora; no sirve en producción. |

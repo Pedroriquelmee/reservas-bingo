@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSesion } from '../auth/Sesion';
 import { DialogoReserva } from '../components/DialogoReserva';
 import { Logotipo, NOMBRE_GRUPO } from '../components/Estructura';
+import { usePlazasPorFecha } from '../lib/ajustes';
 import { useNotificar } from '../components/Notificaciones';
 import { TarjetaFecha } from '../components/TarjetaFecha';
 import { Aviso, Boton, Cargando, Confirmacion } from '../components/ui';
@@ -16,6 +17,7 @@ import type { FechaPublica } from '../lib/tipos';
 export function Inicio() {
   const { sesion } = useSesion();
   const tiempoReal = useTiempoReal();
+  const plazas = usePlazasPorFecha();
   const queryClient = useQueryClient();
   const notificar = useNotificar();
   const uid = sesion?.user.id ?? null;
@@ -73,8 +75,15 @@ export function Inicio() {
             <p className="text-sm font-bold uppercase tracking-[0.14em] text-fucsia-300">{NOMBRE_GRUPO}</p>
             <h1 className="mt-1 text-3xl font-extrabold tracking-tight sm:text-4xl">Reservas de Bingo</h1>
             <p className="mt-3 text-[17px] leading-relaxed text-marino-100">
-              Organizamos aquí quién ayuda en los bingos de los domingos del grupo. Cada domingo necesitamos{' '}
-              <strong className="text-white">3 personas</strong>: puedes ver quién va y apuntarte en las fechas con plazas libres.
+              Organizamos aquí quién ayuda en los bingos de los domingos del grupo.{' '}
+              {plazas ? (
+                <>
+                  Cada domingo necesitamos <strong className="text-white">{plazas} personas</strong>: puedes ver quién va y apuntarte en
+                  las fechas con plazas libres.
+                </>
+              ) : (
+                <>Puedes ver quién va cada domingo y apuntarte en las fechas con plazas libres.</>
+              )}
             </p>
           </div>
         </div>

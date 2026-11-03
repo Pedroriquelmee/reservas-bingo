@@ -126,7 +126,7 @@ export function DialogoReserva({ fecha, onCerrar }: { fecha: FechaPublica | null
           <Aviso tipo="error">
             {fecha.estado === 'cancelada'
               ? 'Este domingo se ha cancelado.'
-              : 'Este domingo ya tiene las tres plazas ocupadas. Puedes consultar otras fechas disponibles.'}
+              : 'Este domingo ya tiene todas las plazas ocupadas. Puedes consultar otras fechas disponibles.'}
           </Aviso>
         )}
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

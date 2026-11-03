@@ -26,6 +26,7 @@ Supabase → **SQL Editor** → **New query**. Pega y ejecuta, **uno a uno y en 
 1. `supabase/migrations/20261011000100_esquema.sql`
 2. `supabase/migrations/20261011000200_funciones.sql`
 3. `supabase/migrations/20261011000300_seguridad.sql`
+4. `supabase/migrations/20261103000100_plazas_configurables.sql`
 
 Cada uno debe terminar con *Success. No rows returned*. Comprobación rápida (nueva consulta):
 

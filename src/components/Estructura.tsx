@@ -1,5 +1,6 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useSesion } from '../auth/Sesion';
+import { usePlazasPorFecha } from '../lib/ajustes';
 import { useNotificar } from './Notificaciones';
 
 export const NOMBRE_GRUPO = 'Grupo Scout Alba 601';
@@ -24,6 +25,7 @@ const claseEnlace = ({ isActive }: { isActive: boolean }) =>
 export function Estructura() {
   const { sesion, perfil, cerrarSesion } = useSesion();
   const notificar = useNotificar();
+  const plazas = usePlazasPorFecha();
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -76,7 +78,7 @@ export function Estructura() {
             <Logotipo className="h-10 w-10 ring-2 ring-fucsia-500/60" />
             <p className="leading-snug">
               <span className="font-semibold text-white">Reservas de Bingo</span> · una iniciativa del {NOMBRE_GRUPO}
-              <span className="block text-marino-300">Máximo 3 personas por domingo</span>
+              <span className="block text-marino-300">{plazas ? `Máximo ${plazas} personas por domingo` : 'Plazas limitadas por domingo'}</span>
             </p>
           </div>
           <span className="flex gap-4">

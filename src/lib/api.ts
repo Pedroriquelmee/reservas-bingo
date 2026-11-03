@@ -29,6 +29,7 @@ async function rpc<T>(funcion: string, args?: Record<string, unknown>): Promise<
 
 // ---------- Público ----------
 export const obtenerCalendario = () => rpc<FechaPublica[]>('calendario_publico');
+export const obtenerAjustesPublicos = () => rpc<{ plazas_por_fecha: number }>('ajustes_publicos');
 
 // ---------- Participante ----------
 export const obtenerMiPerfil = () => rpc<Perfil | null>('mi_perfil');
@@ -87,4 +88,5 @@ export const admin = {
   historial: (antesDe: number | null, limite = 100) =>
     rpc<EntradaHistorial[]>('admin_historial', { p_limite: limite, p_antes_de: antesDe }),
   estadisticas: () => rpc<Estadisticas>('admin_estadisticas'),
+  cambiarPlazas: (plazas: number) => rpc<Configuracion>('admin_cambiar_plazas', { p_plazas: plazas }),
 };

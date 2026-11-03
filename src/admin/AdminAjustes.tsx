@@ -4,6 +4,7 @@ import { Aviso, Boton, Campo, Cargando } from '../components/ui';
 import { admin } from '../lib/api';
 import { mensajeDeError } from '../lib/errores';
 import { esDomingo, formatoCorto, formatoLargo, proximoDomingo } from '../lib/fechas';
+import type { Configuracion } from '../lib/tipos';
 import { Casilla, Selector, useAccion } from './comun';
 
 export function AdminAjustes() {
@@ -43,6 +44,8 @@ export function AdminAjustes() {
   return (
     <div className="max-w-2xl space-y-6">
       <h1 className="text-2xl font-extrabold">Ajustes</h1>
+
+      <AjustePlazas configuracion={consulta.data} />
 
       <form onSubmit={enviar} className="space-y-5 rounded-xl bg-white p-5 ring-1 ring-marino-200">
         <div>
@@ -110,8 +113,62 @@ export function AdminAjustes() {
           <li>Cada vez que un administrador abre el panel.</li>
           <li>A diario, si se ha activado la tarea programada opcional (ver guía de mantenimiento).</li>
         </ul>
-        <p className="mt-3">Plazas por domingo: <strong>3</strong> (fijo, garantizado por la base de datos).</p>
       </section>
     </div>
+  );
+}
+
+/** Número de plazas por domingo. La base de datos garantiza que nunca se supera. */
+function AjustePlazas({ configuracion }: { configuracion: Configuracion }) {
+  const actual = configuracion.plazas_por_fecha;
+  const [plazas, setPlazas] = useState(actual);
+  const accion = useAccion();
+
+  useEffect(() => setPlazas(actual), [actual]);
+
+  async function guardar(e: FormEvent) {
+    e.preventDefault();
+    await accion.ejecutar(() => admin.cambiarPlazas(plazas), `Ahora hay ${plazas} plazas por domingo.`);
+  }
+
+  let error = accion.error?.mensaje;
+  if (accion.error?.codigo === 'PLAZAS_INSUFICIENTES' && accion.error.detalle) {
+    const [fecha, apuntadas] = accion.error.detalle.split('|');
+    error = `No se puede bajar a ${plazas}: el ${formatoLargo(fecha)} ya tiene ${apuntadas} personas apuntadas. Cancela o mueve alguna reserva en «Fechas» y vuelve a intentarlo.`;
+  }
+
+  const valido = Number.isInteger(plazas) && plazas >= 1 && plazas <= 20;
+
+  return (
+    <form onSubmit={guardar} className="space-y-4 rounded-xl bg-white p-5 ring-1 ring-marino-200">
+      <div>
+        <h2 className="text-lg font-bold">Plazas por domingo</h2>
+        <p className="mt-1 text-sm text-marino-700">
+          Cuántas personas pueden apuntarse cada domingo. Se aplica al momento a todas las fechas; la base de datos impide superar
+          este número aunque varias personas reserven a la vez.
+        </p>
+      </div>
+      <div className="flex flex-wrap items-end gap-3">
+        <Campo
+          etiqueta="Plazas"
+          type="number"
+          inputMode="numeric"
+          min={1}
+          max={20}
+          value={Number.isNaN(plazas) ? '' : plazas}
+          onChange={(e) => setPlazas(e.target.valueAsNumber)}
+          className="w-32"
+        />
+        <Boton type="submit" cargando={accion.ocupado} disabled={!valido || plazas === actual}>
+          Guardar plazas
+        </Boton>
+      </div>
+      <p className="text-sm text-marino-600">
+        Ahora: <strong>{actual}</strong> plazas. Al subir el número, los domingos completos vuelven a tener hueco. Para bajarlo, ningún
+        domingo futuro puede tener más personas apuntadas que el nuevo número.
+      </p>
+      {!valido && <Aviso tipo="atencion">Escribe un número entre 1 y 20.</Aviso>}
+      {error && <Aviso tipo="error">{error}</Aviso>}
+    </form>
   );
 }

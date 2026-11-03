@@ -23,12 +23,13 @@ describe('Sistema de reservas', () => {
     expect(await bd.estadoFecha(f.id)).toBe('abierta');
   });
 
-  it('#2 tres personas pueden reservar el mismo domingo y la fecha pasa a COMPLETA', async () => {
+  it('#2 cuatro personas pueden reservar el mismo domingo y la fecha pasa a COMPLETA', async () => {
     const f = await bd.crearFecha(7);
     const personas = [
       await bd.crearParticipante('Pedro'),
       await bd.crearParticipante('María'),
       await bd.crearParticipante('Lucía'),
+      await bd.crearParticipante('Javier'),
     ];
 
     const plazas: number[] = [];
@@ -36,21 +37,21 @@ describe('Sistema de reservas', () => {
       plazas.push((await bd.rpc(p.uid, 'reservar', { p_fecha_id: f.id })).plaza);
     }
 
-    expect(plazas).toEqual([1, 2, 3]);
-    expect(await bd.reservasActivas(f.id)).toBe(3);
+    expect(plazas).toEqual([1, 2, 3, 4]);
+    expect(await bd.reservasActivas(f.id)).toBe(4);
     expect(await bd.estadoFecha(f.id)).toBe('completa');
   });
 
-  it('#3 una cuarta persona no puede reservar esa fecha', async () => {
+  it('#3 una quinta persona no puede reservar esa fecha', async () => {
     const f = await bd.crearFecha(7);
-    for (const n of ['Ana', 'Bea', 'Carla']) {
+    for (const n of ['Ana', 'Bea', 'Carla', 'Diana']) {
       const p = await bd.crearParticipante(n);
       await bd.rpc(p.uid, 'reservar', { p_fecha_id: f.id });
     }
-    const cuarta = await bd.crearParticipante('Diana');
+    const quinta = await bd.crearParticipante('Elena');
 
-    await fallaCon(bd.rpc(cuarta.uid, 'reservar', { p_fecha_id: f.id }), 'FECHA_COMPLETA');
-    expect(await bd.reservasActivas(f.id)).toBe(3);
+    await fallaCon(bd.rpc(quinta.uid, 'reservar', { p_fecha_id: f.id }), 'FECHA_COMPLETA');
+    expect(await bd.reservasActivas(f.id)).toBe(4);
   });
 
   it('#4 cualquiera (incluso sin sesión) ve quién está apuntado, solo con nombre e inicial', async () => {
@@ -64,7 +65,7 @@ describe('Sistema de reservas', () => {
     const dia = cal.find((d: any) => d.id === f.id);
 
     expect(dia.ocupadas).toBe(2);
-    expect(dia.plazas_totales).toBe(3);
+    expect(dia.plazas_totales).toBe(4);
     expect(dia.estado).toBe('abierta');
     expect(dia.participantes.map((p: any) => p.nombre)).toEqual(['Pedro R.', 'María G.']);
     // Nada de correos ni apellidos completos en la parte pública
@@ -100,7 +101,7 @@ describe('Sistema de reservas', () => {
   it('#7 una cancelación autorizada libera la plaza inmediatamente y queda en el historial', async () => {
     const f = await bd.crearFecha(7);
     const ps = [];
-    for (const n of ['Ana', 'Bea', 'Carla']) {
+    for (const n of ['Ana', 'Bea', 'Carla', 'Diana']) {
       const p = await bd.crearParticipante(n);
       ps.push({ ...p, reserva: await bd.rpc(p.uid, 'reservar', { p_fecha_id: f.id }) });
     }
@@ -108,11 +109,11 @@ describe('Sistema de reservas', () => {
 
     await bd.rpc(ps[1].uid, 'cancelar_mi_reserva', { p_reserva_id: ps[1].reserva.id });
 
-    expect(await bd.reservasActivas(f.id)).toBe(2);
+    expect(await bd.reservasActivas(f.id)).toBe(3);
     expect(await bd.estadoFecha(f.id)).toBe('abierta');
 
-    const diana = await bd.crearParticipante('Diana');
-    const r = await bd.rpc(diana.uid, 'reservar', { p_fecha_id: f.id });
+    const elena = await bd.crearParticipante('Elena');
+    const r = await bd.rpc(elena.uid, 'reservar', { p_fecha_id: f.id });
     expect(r.plaza).toBe(2); // reutiliza la plaza liberada
 
     const [h] = await bd.sql<{ n: number }>(
